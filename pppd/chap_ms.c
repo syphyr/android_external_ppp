@@ -98,7 +98,6 @@
 #include "pppcrypt.h"
 #include "magic.h"
 
-static const char rcsid[] = RCSID;
 
 
 static void	ascii2unicode __P((char[], int, u_char[]));
