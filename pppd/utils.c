@@ -169,6 +169,7 @@ vslprintf(buf, buflen, fmt, args)
     u_int32_t ip;
     static char hexchars[] = "0123456789abcdef";
     struct buffer_info bufinfo;
+    int termch;
 
     buf0 = buf;
     --buflen;
@@ -309,14 +310,17 @@ vslprintf(buf, buflen, fmt, args)
 		    p = (unsigned char *)"<NULL>";
 	    if (fillch == '0' && prec >= 0) {
 		n = prec;
+		termch = -1;	/* matches no unsigned char value */
 	    } else {
-		if (prec == -1)
-		    n = strlen((char *)p);
-		else
-		    n = strnlen((char *)p, prec);
+		n = buflen;
+		if (prec != -1 && n > prec)
+		    n = prec;
+		termch = 0;	/* stop on null byte */
 	    }
 	    while (n > 0 && buflen > 0) {
 		c = *p++;
+		if (c == termch)
+		    break;
 		--n;
 		if (!quoted && c >= 0x80) {
 		    OUTCHAR('M');
@@ -396,10 +400,9 @@ vslprintf(buf, buflen, fmt, args)
 	    }
 	    len = num + sizeof(num) - 1 - str;
 	} else {
-	    if (prec == -1)
-		len = strlen(str);
-	    else
-		len = strnlen(str, prec);
+	    for (len = 0; len < buflen && (prec == -1 || len < prec); ++len)
+		if (str[len] == 0)
+		    break;
 	}
 	if (width > 0) {
 	    if (width > buflen)
